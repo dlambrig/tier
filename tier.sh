@@ -1,6 +1,7 @@
 MASTER=rhs-cli-02
 SLAVE=rhs-cli-01
 CLIENT=rhs-cli-14
+VOL=t
 
 function cleanup {
     for i in {0..8};do rm -rf /home/t$i;mkdir /home/t$i;done
@@ -23,24 +24,24 @@ function preparms {
 }
 
 function dist {
-    gluster v create t replica 2 $MASTER:/home/t1 $MASTER:/home/t2 $MASTER:/home/t3 $MASTER:/home/t4 $MASTER:/home/t5 $MASTER:/home/t6 force
-    gluster v start t
-    preparms t
-    gluster volume set t diagnostics.client-log-level DEBUG
+    gluster v create $VOL replica 2 $MASTER:/home/t1 $MASTER:/home/t2 $MASTER:/home/t3 $MASTER:/home/t4 $MASTER:/home/t5 $MASTER:/home/t6 force
+    gluster v start $VOL
+    preparms $VOL
+    gluster volume set $VOL diagnostics.client-log-level DEBUG
     ssh $SLAVE /root/mem.sh
-    yes | gluster v attach-tier t replica 2 $SLAVE:/home/t0 $SLAVE:/home/t1 $SLAVE:/home/t2 $SLAVE:/home/t3 force
-    postparms t
+    yes | gluster v attach-tier $VOL replica 2 $SLAVE:/home/t0 $SLAVE:/home/t1 $SLAVE:/home/t2 $SLAVE:/home/t3 force
+    postparms $VOL
     ssh $CLIENT mount  $MASTER:/t  /mnt
 }
 
 function ec {
-    gluster v create t disperse 6 redundancy 2 $MASTER:/home/t1 $MASTER:/home/t2 $MASTER:/home/t3 $MASTER:/home/t4 $MASTER:/home/t5 $MASTER:/home/t6 force
-    gluster v start t
-    preparms t
-    gluster volume set t diagnostics.client-log-level TRACE
+    gluster v create $VOL disperse 6 redundancy 2 $MASTER:/home/t1 $MASTER:/home/t2 $MASTER:/home/t3 $MASTER:/home/t4 $MASTER:/home/t5 $MASTER:/home/t6 force
+    gluster v start $VOL
+    preparms $VOL
+    gluster volume set $VOL diagnostics.client-log-level TRACE
     ssh $SLAVE /root/mem.sh
-    yes | gluster v attach-tier t replica 2 $SLAVE:/home/t0 $SLAVE:/home/t1 $SLAVE:/home/t2 $SLAVE:/home/t3 force
-    postparms t
+    yes | gluster v attach-tier $VOL replica 2 $SLAVE:/home/t0 $SLAVE:/home/t1 $SLAVE:/home/t2 $SLAVE:/home/t3 force
+    postparms $VOL
     ssh $CLIENT mount  $MASTER:/t  /mnt
 }
 
@@ -60,8 +61,8 @@ function die {
 }
 
 function stop {
-    yes | gluster v stop t force
-    yes | gluster v delete t 
+    yes | gluster v stop $VOL force
+    yes | gluster v delete $VOL
     cleanup
     cleanup_slave
 #    ssh $SLAVE /root/mem-clear.sh
