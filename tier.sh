@@ -1,7 +1,7 @@
 MASTER=rhs-cli-02
 SLAVE=rhs-cli-01
 CLIENT=rhs-cli-14
-VOL=t
+VOL=vol1
 
 function cleanup {
     for i in {0..8};do rm -rf /home/t$i;mkdir /home/t$i;done
@@ -23,15 +23,19 @@ function preparms {
     gluster v set $1 performance.io-cache off
 }
 
-function dist {
+function dist_cold {
     gluster v create $VOL replica 2 $MASTER:/home/t1 $MASTER:/home/t2 $MASTER:/home/t3 $MASTER:/home/t4 $MASTER:/home/t5 $MASTER:/home/t6 force
     gluster v start $VOL
     preparms $VOL
     gluster volume set $VOL diagnostics.client-log-level DEBUG
     ssh $SLAVE /root/mem.sh
+}
+
+function dist {
+    dist_cold
     yes | gluster v attach-tier $VOL replica 2 $SLAVE:/home/t0 $SLAVE:/home/t1 $SLAVE:/home/t2 $SLAVE:/home/t3 force
     postparms $VOL
-    ssh $CLIENT mount  $MASTER:/t  /mnt
+    ssh $CLIENT mount -t glusterfs $MASTER:/$VOL  /mnt
 }
 
 function ec {
@@ -42,7 +46,7 @@ function ec {
     ssh $SLAVE /root/mem.sh
     yes | gluster v attach-tier $VOL replica 2 $SLAVE:/home/t0 $SLAVE:/home/t1 $SLAVE:/home/t2 $SLAVE:/home/t3 force
     postparms $VOL
-    ssh $CLIENT mount  $MASTER:/t  /mnt
+    ssh $CLIENT mount  $MASTER:/$VOL  /mnt
 }
 
 function die {
@@ -74,7 +78,7 @@ function setup  {
     ssh-copy-id $SLAVE
 }
 
-while getopts ":nsde" opt; do
+while getopts ":nsdea" opt; do
   case $opt in
       n)
           echo copy client id
@@ -94,13 +98,35 @@ while getopts ":nsde" opt; do
           echo setup ec volume
           ec
           ;;
+      a)
+          echo attach tier test
+          dist_cold
+          rand=$(( ( RANDOM % 10 )  + 1 ))
+
+          postparms $VOL
+          ssh $CLIENT mount  $MASTER:/$VOL  /mnt
+          ssh $CLIENT mkdir /mnt/z
+          ssh -f $CLIENT "cd /mnt/z;tar xf /root/g.tar 2> /tmp/out;echo $? >> /tmp/out"
+          sleep $rand
+          echo Waited $rand seconds
+          yes | gluster v attach-tier $VOL replica 2 $SLAVE:/home/t0 $SLAVE:/home/t1 $SLAVE:/home/t2 $SLAVE:/home/t3 force
+          s=$(date +%s)
+          ssh $SLAVE "cd /home;while ! getfattr -e hex -m fix-layout-done -d t0|grep fix-layout-done ;do echo Wait for fix layout;sleep 3;done"
+          gluster v set $VOL performance.quick-read off
+
+          ssh $CLIENT "cd /mnt/z;while pgrep tar;do date +%s; echo waiting from $s for $(pgrep tar);sleep 2;done"
+          ssh $CLIENT "cat /tmp/out"
+          ssh $CLIENT "find /mnt/z|wc -l"
+          echo Done
+          ;;
       \?)
           echo "-n : start from scratch: kill restart glusterd"
           echo "-s : stop and remove tiered volume"
           echo "-d : create tiered distributed volume"
           echo "-e : create tiered ec volume"
+          echo "-a : attach volume test"
           ;;
       esac
 done
 
-gluster v info
+
