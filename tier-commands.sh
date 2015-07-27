@@ -1,4 +1,4 @@
-
+HOSTNAME=`hostname`
 function db {
     printf "Flink tb\n\n"
     echo "select * from gf_flink_tb;" | sqlite3 $1
@@ -7,9 +7,9 @@ function db {
 }
 
 function tier_create {
-    gluster v create vol1 rhs-cli-14:/home/t1 rhs-cli-14:/home/t2 force
+    gluster v create vol1 $HOSTNAME:/home/t1 $HOSTNAME:/home/t2 force
     gluster v start vol1
-    yes |gluster v attach-tier vol1 rhs-cli-14:/home/t3 rhs-cli-14:/home/t4 force
+    yes |gluster v attach-tier vol1 $HOSTNAME:/home/t3 $HOSTNAME:/home/t4 force
 }
 
 function tier_delete {

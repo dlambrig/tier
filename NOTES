@@ -1,0 +1,5 @@
+sudo systemctl enable rpcbind.socket
+sudo systemctl restart rpcbind.service
+sudo mount -a
+
+

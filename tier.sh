@@ -15,9 +15,11 @@ function postparms {
     gluster v set $1 features.ctr-enabled on
     gluster volume set $1 cluster.read-freq-threshold 0
     gluster volume set $1 cluster.write-freq-threshold 0
-    gluster volume set $1 cluster.tier-demote-frequency 60
-    gluster volume set $1 cluster.tier-promote-frequency 60
+    gluster volume set $1 cluster.tier-demote-frequency 2000
+    gluster volume set $1 cluster.tier-promote-frequency 2000
+    gluster volume set $1 diagnostics.client-log-level DEBUG
 }
+
 function preparms {
     gluster v set $1 performance.quick-read off
     gluster v set $1 performance.io-cache off
@@ -36,6 +38,16 @@ function dist {
     yes | gluster v attach-tier $VOL replica 2 $SLAVE:/home/t0 $SLAVE:/home/t1 $SLAVE:/home/t2 $SLAVE:/home/t3 force
     postparms $VOL
     ssh $CLIENT mount -t glusterfs $MASTER:/$VOL  /mnt
+}
+
+function dist_test {
+    dist_cold
+    ssh $CLIENT mount $MASTER:/$VOL  /mnt
+    ssh $CLIENT mkdir -p /mnt/z/a
+#    yes | gluster v stop $VOL
+    yes | gluster v attach-tier $VOL replica 2 $SLAVE:/home/t0 $SLAVE:/home/t1 $SLAVE:/home/t2 $SLAVE:/home/t3 force
+#    gluster v start $VOL
+    postparms $VOL
 }
 
 function ec {
@@ -78,7 +90,7 @@ function setup  {
     ssh-copy-id $SLAVE
 }
 
-while getopts ":nsdea" opt; do
+while getopts ":nsdeat" opt; do
   case $opt in
       n)
           echo copy client id
@@ -94,6 +106,10 @@ while getopts ":nsdea" opt; do
           echo dist
           dist
           ;;
+      t)  
+          echo dist_test
+          dist_test
+          ;;
       e) 
           echo setup ec volume
           ec
@@ -105,16 +121,16 @@ while getopts ":nsdea" opt; do
 
           postparms $VOL
           ssh $CLIENT mount  $MASTER:/$VOL  /mnt
+#          ssh $CLIENT mount  -t glusterfs $MASTER:/$VOL  /mnt
           ssh $CLIENT mkdir /mnt/z
           ssh -f $CLIENT "cd /mnt/z;tar xf /root/g.tar 2> /tmp/out;echo $? >> /tmp/out"
           sleep $rand
           echo Waited $rand seconds
           yes | gluster v attach-tier $VOL replica 2 $SLAVE:/home/t0 $SLAVE:/home/t1 $SLAVE:/home/t2 $SLAVE:/home/t3 force
           s=$(date +%s)
-          ssh $SLAVE "cd /home;while ! getfattr -e hex -m fix-layout-done -d t0|grep fix-layout-done ;do echo Wait for fix layout;sleep 3;done"
-          gluster v set $VOL performance.quick-read off
+#          ssh $SLAVE "cd /home;while ! getfattr -e hex -m fix-layout-done -d t0|grep fix-layout-done ;do echo Wait for fix layout;sleep 3;done"
 
-          ssh $CLIENT "cd /mnt/z;while pgrep tar;do date +%s; echo waiting from $s for $(pgrep tar);sleep 2;done"
+          ssh $CLIENT "while pgrep tar;do date +%s; echo waiting from $s for $(pgrep tar);sleep 2;done"
           ssh $CLIENT "cat /tmp/out"
           ssh $CLIENT "find /mnt/z|wc -l"
           echo Done
