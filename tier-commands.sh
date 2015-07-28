@@ -1,4 +1,7 @@
 HOSTNAME=`hostname`
+
+alias g=gluster
+
 function db {
     printf "Flink tb\n\n"
     echo "select * from gf_flink_tb;" | sqlite3 $1
