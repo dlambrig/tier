@@ -30,7 +30,7 @@ function dist_cold {
     gluster v start $VOL
     preparms $VOL
     gluster volume set $VOL diagnostics.client-log-level DEBUG
-    ssh $SLAVE /root/mem.sh
+#    ssh $SLAVE /root/mem.sh
 }
 
 function dist {
@@ -55,7 +55,7 @@ function ec {
     gluster v start $VOL
     preparms $VOL
     gluster volume set $VOL diagnostics.client-log-level TRACE
-    ssh $SLAVE /root/mem.sh
+#    ssh $SLAVE /root/mem.sh
     yes | gluster v attach-tier $VOL replica 2 $SLAVE:/home/t0 $SLAVE:/home/t1 $SLAVE:/home/t2 $SLAVE:/home/t3 force
     postparms $VOL
     ssh $CLIENT mount  $MASTER:/$VOL  /mnt
