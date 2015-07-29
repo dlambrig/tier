@@ -90,7 +90,7 @@ function setup  {
     ssh-copy-id $SLAVE
 }
 
-while getopts ":nsdeat" opt; do
+while getopts ":nsdeatb" opt; do
   case $opt in
       n)
           echo copy client id
@@ -134,6 +134,27 @@ while getopts ":nsdeat" opt; do
           ssh $CLIENT "cat /tmp/out"
           ssh $CLIENT "find /mnt/z|wc -l"
           echo Done
+          ;;
+      b)
+          echo easier attach tier test
+          dist_cold
+          rand=$(( ( RANDOM % 10 )  + 1 ))
+
+          postparms $VOL
+          ssh $CLIENT mount  $MASTER:/$VOL  /mnt
+#          ssh $CLIENT mount  -t glusterfs $MASTER:/$VOL  /mnt
+          ssh $CLIENT mkdir /mnt/z
+          ssh -f $CLIENT "cd /mnt/z;tar xf /root/g.tar 2> /tmp/out;echo $? >> /tmp/out"
+#          sleep $rand
+#          echo Waited $rand seconds
+          s=$(date +%s)
+#          ssh $SLAVE "cd /home;while ! getfattr -e hex -m fix-layout-done -d t0|grep fix-layout-done ;do echo Wait for fix layout;sleep 3;done"
+
+          ssh $CLIENT "while pgrep tar;do date +%s; echo waiting from $s for $(pgrep tar);sleep 2;done"
+          ssh $CLIENT "cat /tmp/out"
+          ssh $CLIENT "find /mnt/z|wc -l"
+          echo Done. Now attach
+          yes | gluster v attach-tier $VOL replica 2 $SLAVE:/home/t0 $SLAVE:/home/t1 $SLAVE:/home/t2 $SLAVE:/home/t3 force
           ;;
       \?)
           echo "-n : start from scratch: kill restart glusterd"
