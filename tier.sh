@@ -1,5 +1,5 @@
-MASTER=rhs-cli-14
-SLAVE=rhs-cli-14
+MASTER=rhs-cli-01
+SLAVE=rhs-cli-02
 SLAVE2=rhs-cli-14
 CLIENT=rhs-cli-14
 VOL=vol1
