@@ -1,8 +1,9 @@
 MASTER=rhs-cli-02
 SLAVE=rhs-cli-01
-SLAVE2=rhs-cli-11
-CLIENT=rhs-cli-14
+SLAVE2=rhs-cli-02
+CLIENT=rhs-cli-11
 VOL=vol1
+FREQ=60
 
 function cleanup {
     for i in {0..8};do rm -rf /home/t$i;mkdir /home/t$i;done
@@ -20,8 +21,8 @@ function postparms {
     gluster v set $1 features.ctr-enabled on
     gluster volume set $1 cluster.read-freq-threshold 0
     gluster volume set $1 cluster.write-freq-threshold 0
-    gluster volume set $1 cluster.tier-demote-frequency 2000
-    gluster volume set $1 cluster.tier-promote-frequency 2000
+    gluster volume set $1 cluster.tier-demote-frequency $FREQ
+    gluster volume set $1 cluster.tier-promote-frequency $FREQ
     gluster volume set $1 diagnostics.client-log-level DEBUG
 }
 
@@ -35,7 +36,6 @@ function dist_cold {
     gluster v start $VOL
     preparms $VOL
     gluster volume set $VOL diagnostics.client-log-level DEBUG
-#    ssh $SLAVE /root/mem.sh
 }
 
 function dist {
@@ -60,7 +60,6 @@ function ec {
     gluster v start $VOL
     preparms $VOL
     gluster volume set $VOL diagnostics.client-log-level TRACE
-#    ssh $SLAVE /root/mem.sh
     yes | gluster v attach-tier $VOL replica 2 $SLAVE:/home/t0 $SLAVE:/home/t1 $SLAVE:/home/t2 $SLAVE:/home/t3 force
     postparms $VOL
     ssh $CLIENT mount  $MASTER:/$VOL  /mnt
@@ -93,7 +92,6 @@ function stop {
     cleanup
     cleanup_slave
     cleanup_slave2
-#    ssh $SLAVE /root/mem-clear.sh
     ssh $CLIENT umount -f /mnt
 }
 
@@ -106,8 +104,9 @@ function setup  {
 function perf1 {
     gluster v create $VOL disperse 6 redundancy 2 $MASTER:/home/t0 $MASTER:/home/t1 $SLAVE:/home/t0 $SLAVE:/home/t1 $SLAVE2:/home/t0 $SLAVE2:/home/t1 force
     gluster v start vol1 force
-
+    preparms $VOL
     yes | gluster v attach-tier $VOL replica 2 $MASTER:/home/t2 $MASTER:/home/t3 $SLAVE:/home/t2 $SLAVE:/home/t3 $SLAVE2:/home/t2 $SLAVE2:/home/t3 force
+    postparms $VOL
 
     ssh $CLIENT mount  $MASTER:/$VOL  /mnt
 
@@ -116,6 +115,15 @@ function perf1 {
 function perf2 {
     gluster v create $VOL disperse 6 redundancy 2 $MASTER:/home/t0 $MASTER:/home/t1 $SLAVE:/home/t0 $SLAVE:/home/t1 $SLAVE2:/home/t0 $SLAVE2:/home/t1 force
     gluster v start vol1 force
+    preparms $VOL
+    ssh $CLIENT mount  $MASTER:/$VOL  /mnt
+}
+
+function perf3 {
+
+    yes | gluster v create $VOL replica 2 $MASTER:/home/t2 $MASTER:/home/t3 $SLAVE:/home/t2 $SLAVE:/home/t3 $SLAVE2:/home/t2 $SLAVE2:/home/t3 force
+    gluster v start vol1 force
+    preparms $VOL
     ssh $CLIENT mount  $MASTER:/$VOL  /mnt
 }
 
@@ -187,7 +195,7 @@ while getopts ":nsdeatbp" opt; do
           ;;
       p)
           shift $((OPTIND-1))
-          getopts ":ab" opt
+          getopts ":abc" opt
           case $opt in
               a)
                   echo ec+distrep tiered
@@ -196,6 +204,10 @@ while getopts ":nsdeatbp" opt; do
               b)
                   echo just ec
                   perf2
+                  ;;
+              c)
+                  echo just dist
+                  perf3
                   ;;
               esac
           ;;
