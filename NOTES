@@ -1,3 +1,5 @@
+./fsstress.py -t /mnt/fst -d 120 -f 500 -s 256 -r 64 -D 10 -l 2 -i 1 --random-distribution gaussian --mean-velocity 1 --gaussian-stddev 40 --create_stddevs-ahead 10
+
 sudo systemctl enable rpcbind.socket
 sudo systemctl restart rpcbind.service
 sudo mount -a

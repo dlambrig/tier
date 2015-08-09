@@ -1,20 +1,20 @@
-MASTER=rhs-cli-02
-SLAVE=rhs-cli-01
-SLAVE2=rhs-cli-02
-CLIENT=rhs-cli-11
+MASTER=rhs-cli-01
+SLAVE=rhs-cli-02
+SLAVE2=rhs-cli-14
+CLIENT=rhs-cli-14
 VOL=vol1
 FREQ=60
 
 function cleanup {
-    for i in {0..8};do rm -rf /home/t$i;mkdir /home/t$i;done
+    for i in {0..10};do rm -rf /home/t$i;mkdir /home/t$i;done
 }
 
 function cleanup_slave {
-    ssh $SLAVE 'for i in {0..8};do rm -rf /home/t$i;mkdir /home/t$i;done'
+    ssh $SLAVE 'for i in {0..10};do rm -rf /home/t$i;mkdir /home/t$i;done'
 }
 
 function cleanup_slave2 {
-    ssh $SLAVE2 'for i in {0..8};do rm -rf /home/t$i;mkdir /home/t$i;done'
+    ssh $SLAVE2 'for i in {0..10};do rm -rf /home/t$i;mkdir /home/t$i;done'
 }
 
 function postparms {
@@ -163,7 +163,7 @@ while getopts ":nsdeatbp" opt; do
           ssh -f $CLIENT "cd /mnt/z;tar xf /root/g.tar 2> /tmp/out;echo $? >> /tmp/out"
           sleep $rand
           echo Waited $rand seconds
-          yes | gluster v attach-tier $VOL replica 2 $SLAVE:/home/t0 $SLAVE:/home/t1 $SLAVE:/home/t2 $SLAVE:/home/t3 force
+          yes | gluster v attach-tier $VOL replica 2 $SLAVE:/home/t7 $SLAVE:/home/t8 $SLAVE:/home/t9 $SLAVE:/home/t10 force
           s=$(date +%s)
 #          ssh $SLAVE "cd /home;while ! getfattr -e hex -m fix-layout-done -d t0|grep fix-layout-done ;do echo Wait for fix layout;sleep 3;done"
 
