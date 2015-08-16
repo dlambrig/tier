@@ -4,4 +4,12 @@ sudo systemctl enable rpcbind.socket
 sudo systemctl restart rpcbind.service
 sudo mount -a
 
+- busy during migration
+- NFS+rename
+- NFS+dht_rebalance_in_progress_check
+- NFS+softlink
+- FUSE+softlink?
 
+
+
+while true;do ./run-tests.sh -f tests/basic/tier/tier.t; if [ $? != 0 ] ; then break; fi;done
