@@ -2,6 +2,18 @@ HOSTNAME=`hostname`
 
 alias g=gluster
 
+function tier_test {
+    i=0
+    while true; do
+        echo $i
+        ./run-tests.sh -f tests/basic/tier/tier.t;
+        if [ $? != 0 ]; then
+            break
+        fi
+        ((i=i+1))
+    done
+}
+
 function db {
     printf "Flink tb\n\n"
     echo "select * from gf_flink_tb;" | sqlite3 $1
