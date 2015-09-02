@@ -80,3 +80,17 @@ function kill_fs {
     for i in {1..4};do umount /var/tmp/disk-image$i ;done
     rm -f /var/tmp/dist-image*
 }
+
+# echo "DELETE FROM GF_FILE_TB WHERE GF_ID='e77d3873-b514-48ab-9477-a90ca019f864';"|sqlite3 /d/backends/patchy0/.glusterfs/patchy0.db
+
+function db_fill {
+    parent=$1
+
+    for i in {1..$2}; do
+        gfid=`uuidgen`
+        $fname=data1
+        $pathfname="/d/"$fname$i
+        echo "insert into gf_file_tb (GF_ID, W_SEC, W_MSEC, UW_SEC, UW_MSEC) VALUES ("$gfid",1,2,3,4);" | sqlite3 /d/backends/patchy0/.glusterfs/patchy0.db
+        echo "insert into gf_file_link_tb (GF_ID, GF_PID, FNAME, FPATH, W_DEL_FLAG, LINK_UPDATE) VALUES ("$gfid","$parent","$fname","$pathfname",0,0)"
+    done
+}
