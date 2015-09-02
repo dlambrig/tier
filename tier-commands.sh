@@ -2,6 +2,7 @@ HOSTNAME=`hostname`
 FREQ=60
 
 alias g=gluster
+alias fsd="./fs-drift.py -t /mnt/fst -d 60 -f 500 -s 256 -r 64 -D 10 -l 2 -i 1 --random-distribution gaussian --mean-velocity 1 --gaussian-stddev 40 --create_stddevs-ahead 10 --short-stats 1"
 
 function tier_test {
     while true; do
