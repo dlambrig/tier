@@ -1,7 +1,7 @@
 MASTER=rhs-cli-01
-SLAVE=rhs-cli-02
-SLAVE2=rhs-cli-14
-CLIENT=rhs-cli-14
+SLAVE=rhs-cli-01
+SLAVE2=rhs-cli-01
+CLIENT=rhs-cli-01
 VOL=vol1
 FREQ=60
 
@@ -157,8 +157,8 @@ while getopts ":nsdeatbp" opt; do
           rand=$(( ( RANDOM % 10 )  + 1 ))
 
           postparms $VOL
-          ssh $CLIENT mount  $MASTER:/$VOL  /mnt
-#          ssh $CLIENT mount  -t glusterfs $MASTER:/$VOL  /mnt
+#          ssh $CLIENT mount  $MASTER:/$VOL  /mnt
+          ssh $CLIENT mount  -t glusterfs $MASTER:/$VOL  /mnt
           ssh $CLIENT mkdir /mnt/z
           ssh -f $CLIENT "cd /mnt/z;tar xf /root/g.tar 2> /tmp/out;echo $? >> /tmp/out"
           sleep $rand

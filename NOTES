@@ -13,6 +13,8 @@ sudo mount -a
 - NFS+softlink
 - FUSE+softlink?
 
-
-
 while true;do ./run-tests.sh -f tests/basic/tier/tier.t; if [ $? != 0 ] ; then break; fi;done
+
+/sbin/mkfs --type=xfs  /var/tmp/disk
+mount /var/tmp/disk /mnt
+
