@@ -12,6 +12,40 @@ function tier_test {
     done
 }
 
+function postparms {
+    gluster v set $1 features.ctr-enabled on
+    gluster volume set $1 cluster.read-freq-threshold 0
+    gluster volume set $1 cluster.write-freq-threshold 0
+    gluster volume set $1 cluster.tier-demote-frequency $FREQ
+    gluster volume set $1 cluster.tier-promote-frequency $FREQ
+    gluster volume set $1 diagnostics.client-log-level DEBUG
+}
+
+function tier_wm {
+    dd if=/dev/zero of=/var/tmp/disk1 bs=1M count=100
+    dd if=/dev/zero of=/var/tmp/disk2 bs=1M count=100
+    mkfs --type=xfs  /var/tmp/disk1
+    mkfs --type=xfs  /var/tmp/disk2
+    mount /var/tmp/disk1 /mnt/fastbrick1
+    mount /var/tmp/disk2 /mnt/fastbrick2
+    gluster v create vol1 $HOSTNAME:/home/t1 $HOSTNAME:/home/t2 force
+    gluster v set vol1 diagnostics.client-log-level DEBUG
+    gluster v start vol1
+    yes |gluster v attach-tier vol1 replica 2 $HOSTNAME:/mnt/fastbrick1 $HOSTNAME:/mnt/fastbrick2 force
+    mount -t glusterfs $HOSTNAME:/vol1 /mnt/wm
+    postparms vol1
+}
+
+function tier_d_wm {
+    umount -f /mnt/wm
+    rm -f /mnt/wm
+    mkdir /mnt/wm
+    yes | gluster v stop vol1
+    yes | gluster v delete vol1
+    umount /mnt/fastbrick1
+    umount /mnt/fastbrick2
+}
+
 function db {
     printf "Flink tb\n\n"
     echo "select * from gf_flink_tb;" | sqlite3 $1
@@ -28,15 +62,6 @@ function tier_create {
 
 function tier_delete {
     yes|gluster v stop vol1;yes|gluster v delete vol1
-}
-
-function postparms {
-    gluster v set $1 features.ctr-enabled on
-    gluster volume set $1 cluster.read-freq-threshold 0
-    gluster volume set $1 cluster.write-freq-threshold 0
-    gluster volume set $1 cluster.tier-demote-frequency $FREQ
-    gluster volume set $1 cluster.tier-promote-frequency $FREQ
-    gluster volume set $1 diagnostics.client-log-level DEBUG
 }
 
 function make_fs {
