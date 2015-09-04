@@ -1,7 +1,7 @@
 MASTER=rhs-cli-01
-SLAVE=rhs-cli-01
+SLAVE=rhs-cli-02
 SLAVE2=rhs-cli-01
-CLIENT=rhs-cli-01
+CLIENT=rhs-cli-11
 VOL=vol1
 FREQ=60
 
@@ -65,6 +65,19 @@ function ec {
     ssh $CLIENT mount  $MASTER:/$VOL  /mnt
 }
 
+function dist_wm {
+    for i in {1..4}; do
+        ssh $SLAVE mkdir /mnt/fastbrick$i
+        ssh $SLAVE dd if=/dev/zero of=/var/tmp/disk$i bs=1M count=100
+        ssh $SLAVE mkfs --type=xfs  /var/tmp/disk$i
+        ssh $SLAVE mount /var/tmp/disk$i /mnt/fastbrick$i
+    done
+    dist_cold
+    yes | gluster v attach-tier $VOL replica 2 $SLAVE:/mnt/fastbrick1 $SLAVE:/mnt/fastbrick2 $SLAVE:/mnt/fastbrick3 $SLAVE:/mnt/fastbrick4 force
+    postparms $VOL
+    ssh $CLIENT mount -t glusterfs $MASTER:/$VOL  /mnt
+}
+
 function die {
     killall glusterfs
     killall glusterfsd
@@ -92,6 +105,9 @@ function stop {
     cleanup
     cleanup_slave
     cleanup_slave2
+    for i in {1..4}; do
+        ssh $SLAVE umount /mnt/fastbrick$i
+    done
     ssh $CLIENT umount -f /mnt
 }
 
@@ -140,8 +156,18 @@ while getopts ":nsdeatbp" opt; do
           stop
           ;;
       d)  
-          echo dist
-          dist
+          shift $((OPTIND-1))
+          getopts ":abc" opt
+          case $opt in
+              a)
+                  echo dist
+                  dist
+                  ;;
+              b)
+                  echo dist_wm
+                  dist_wm
+                  ;;
+          esac
           ;;
       t)  
           echo dist_test
