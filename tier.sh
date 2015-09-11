@@ -195,8 +195,6 @@ while getopts ":nsdeatbp" opt; do
           echo Waited $rand seconds
           yes | gluster v attach-tier $VOL replica 2 $SLAVE:/home/t7 $SLAVE:/home/t8 $SLAVE:/home/t9 $SLAVE:/home/t10 force
           s=$(date +%s)
-#          ssh $SLAVE "cd /home;while ! getfattr -e hex -m fix-layout-done -d t0|grep fix-layout-done ;do echo Wait for fix layout;sleep 3;done"
-
           ssh $CLIENT "while pgrep tar;do date +%s; echo waiting from $s for $(pgrep tar);sleep 2;done"
           ssh $CLIENT "cat /tmp/out"
           ssh $CLIENT "find /mnt/z|wc -l"
@@ -244,11 +242,14 @@ while getopts ":nsdeatbp" opt; do
       \?)
           echo "-n : start from scratch: kill restart glusterd"
           echo "-s : stop and remove tiered volume"
-          echo "-d : create tiered distributed volume"
+          echo "-da : create tiered distributed volume"
+          echo "-db : create 100M tiered distributed volume to test watermarks"
           echo "-e : create tiered ec volume"
           echo "-a : attach volume test (I/O durring attach)"
           echo "-b : attach volume test (no I/O during attach)"
-          echo "-p : performance test setup"
+          echo "-pa : performance test setup ec+distrep"
+          echo "-pb : performance test setup ec"
+          echo "-pc : performance test setup distrep"
           ;;
       esac
 done
