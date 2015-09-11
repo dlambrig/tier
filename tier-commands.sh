@@ -57,7 +57,7 @@ function tier_create {
     gluster v create vol1 $HOSTNAME:/home/t1 $HOSTNAME:/home/t2 force
     gluster v set vol1 diagnostics.client-log-level DEBUG
     gluster v start vol1
-    yes |gluster v tier vol1 attach $HOSTNAME:/home/t3 $HOSTNAME:/home/t4 force
+    yes |gluster v attach-tier vol1  $HOSTNAME:/home/t3 $HOSTNAME:/home/t4 force
 }
 
 function tier_delete {

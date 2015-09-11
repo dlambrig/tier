@@ -1,7 +1,7 @@
 MASTER=rhs-cli-01
 SLAVE=rhs-cli-02
 SLAVE2=rhs-cli-01
-CLIENT=rhs-cli-11
+CLIENT=rhs-cli-14
 VOL=vol1
 FREQ=60
 
@@ -118,21 +118,25 @@ function setup  {
 }
 
 function perf1 {
-    gluster v create $VOL disperse 6 redundancy 2 $MASTER:/home/t0 $MASTER:/home/t1 $SLAVE:/home/t0 $SLAVE:/home/t1 $SLAVE2:/home/t0 $SLAVE2:/home/t1 force
+    #    gluster v create $VOL disperse 6 redundancy 2 $MASTER:/home/t0 $MASTER:/home/t1 $SLAVE:/home/t0 $SLAVE:/home/t1 $SLAVE2:/home/t0 $SLAVE2:/home/t1 force
+    gluster v create $VOL disperse 6 redundancy 2 $MASTER:/home/t0 $MASTER:/home/t1 $MASTER:/home/t2 $SLAVE:/home/t0 $SLAVE:/home/t1 $SLAVE:/home/t2 force
     gluster v start vol1 force
     preparms $VOL
-    yes | gluster v attach-tier $VOL replica 2 $MASTER:/home/t2 $MASTER:/home/t3 $SLAVE:/home/t2 $SLAVE:/home/t3 $SLAVE2:/home/t2 $SLAVE2:/home/t3 force
+    yes | gluster v attach-tier $VOL replica 2 $MASTER:/home/t3 $MASTER:/home/t4 $MASTER:/home/t5 $SLAVE:/home/t3 $SLAVE:/home/t4 $SLAVE:/home/t5 force
     postparms $VOL
 
-    ssh $CLIENT mount  $MASTER:/$VOL  /mnt
+    ssh $CLIENT mount -t glusterfs   $MASTER:/$VOL  /mnt
 
 }
 
 function perf2 {
-    gluster v create $VOL disperse 6 redundancy 2 $MASTER:/home/t0 $MASTER:/home/t1 $SLAVE:/home/t0 $SLAVE:/home/t1 $SLAVE2:/home/t0 $SLAVE2:/home/t1 force
+#    gluster v create $VOL disperse 6 redundancy 2 $MASTER:/home/t0 $MASTER:/home/t1 $SLAVE:/home/t0 $SLAVE:/home/t1 $SLAVE2:/home/t0 $SLAVE2:/home/t1 force
+    gluster v create $VOL disperse 6 redundancy 2 $MASTER:/home/t0 $MASTER:/home/t1 $MASTER:/home/t2 $SLAVE:/home/t3 $SLAVE:/home/t4 $SLAVE:/home/t5 force
     gluster v start vol1 force
     preparms $VOL
-    ssh $CLIENT mount  $MASTER:/$VOL  /mnt
+#    ssh $CLIENT mount  $MASTER:/$VOL  /mnt
+    ssh $CLIENT mount -t glusterfs  $MASTER:/$VOL  /mnt
+
 }
 
 function perf3 {
