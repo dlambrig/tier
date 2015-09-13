@@ -18,3 +18,13 @@ while true;do ./run-tests.sh -f tests/basic/tier/tier.t; if [ $? != 0 ] ; then b
 /sbin/mkfs --type=xfs  /var/tmp/disk
 mount /var/tmp/disk /mnt
 
+tmux
+  ctr-b " split vert
+  ctr-b % split horiz
+  ctr-b arrow move between panes
+
+bash
+  export PS1="\e[0;31m[\u@\h \W]\$ \e[m"
+    34 blue, 32 green, 31 red, 35 purple
+
+
