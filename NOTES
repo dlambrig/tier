@@ -21,6 +21,7 @@ tmux
   ctr-b " split vert
   ctr-b % split horiz
   ctr-b arrow move between panes
+  tmux attach-session -t 0 -d
 
 bash
   export PS1="\e[0;31m[\u@\h \W]\$ \e[m"
