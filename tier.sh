@@ -1,7 +1,7 @@
 MASTER=rhs-cli-01
-SLAVE=rhs-cli-12
-SLAVE2=rhs-cli-01
-CLIENT=rhs-cli-15
+SLAVE=rhs-cli-02
+SLAVE2=
+CLIENT=rhs-cli-14
 VOL=vol1
 FREQ=60
 
