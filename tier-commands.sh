@@ -85,13 +85,14 @@ function kill_fs {
 # echo "DELETE FROM GF_FILE_TB WHERE GF_ID='e77d3873-b514-48ab-9477-a90ca019f864';"|sqlite3 /d/backends/patchy0/.glusterfs/patchy0.db
 
 function db_fill {
-    parent=$1
+    parent=$2
 
-    for i in {1..$2}; do
+    for i in `seq $3 $4`; do
         gfid=`uuidgen`
-        $fname=data1
-        $pathfname="/d/"$fname$i
-        echo "insert into gf_file_tb (GF_ID, W_SEC, W_MSEC, UW_SEC, UW_MSEC) VALUES ("$gfid",1,2,3,4);" | sqlite3 /d/backends/patchy0/.glusterfs/patchy0.db
-        echo "insert into gf_file_link_tb (GF_ID, GF_PID, FNAME, FPATH, W_DEL_FLAG, LINK_UPDATE) VALUES ("$gfid","$parent","$fname","$pathfname",0,0)"
+        fname="data"
+        pathfname="/d/"$fname$i
+        curtime=`date +%s`
+        echo "insert into gf_file_tb (GF_ID, W_SEC, W_MSEC, UW_SEC, UW_MSEC) VALUES (\""$gfid"\",\""$curtime"\",2,\""$curtime"\",4);"| sqlite3 $1
+        echo "insert into gf_flink_tb (GF_ID, GF_PID, FNAME, FPATH, W_DEL_FLAG, LINK_UPDATE) VALUES (\""$gfid\"",\""$parent"\",\""$fname"\",\""$pathfname"\",0,0);" | sqlite3 $1
     done
 }
