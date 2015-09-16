@@ -84,6 +84,8 @@ function kill_fs {
 
 # echo "DELETE FROM GF_FILE_TB WHERE GF_ID='e77d3873-b514-48ab-9477-a90ca019f864';"|sqlite3 /d/backends/patchy0/.glusterfs/patchy0.db
 
+# echo "select * from gf_file_tb where ( W_SEC >= $curtime );" |sqlite3 /home/t1/.glusterfs/t1.db
+
 function db_fill {
     parent=$2
 
