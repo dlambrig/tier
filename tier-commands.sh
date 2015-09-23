@@ -88,13 +88,15 @@ function kill_fs {
 
 function db_fill {
     parent=$2
-
-    for i in `seq $3 $4`; do
+    i=$2
+    while [ $i -le $3 ]; do
+        (( ! ($i % 100) )) && echo $i
         gfid=`uuidgen`
         fname="data"
         pathfname="/d/"$fname$i
         curtime=`date +%s`
         echo "insert into gf_file_tb (GF_ID, W_SEC, W_MSEC, UW_SEC, UW_MSEC) VALUES (\""$gfid"\",\""$curtime"\",2,\""$curtime"\",4);"| sqlite3 $1
         echo "insert into gf_flink_tb (GF_ID, GF_PID, FNAME, FPATH, W_DEL_FLAG, LINK_UPDATE) VALUES (\""$gfid\"",\""$parent"\",\""$fname"\",\""$pathfname"\",0,0);" | sqlite3 $1
+        i=$(($i+1))
     done
 }
