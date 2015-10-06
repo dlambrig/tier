@@ -1,20 +1,20 @@
 MASTER=rhs-cli-01
 SLAVE=rhs-cli-02
-SLAVE2=rhs-cli-01
+SLAVE2=
 CLIENT=rhs-cli-14
 VOL=vol1
 FREQ=60
 
 function cleanup {
-    for i in {0..10};do rm -rf /home/t$i;mkdir /home/t$i;done
+    for i in {0..12};do rm -rf /home/t$i;mkdir /home/t$i;done
 }
 
 function cleanup_slave {
-    ssh $SLAVE 'for i in {0..10};do rm -rf /home/t$i;mkdir /home/t$i;done'
+    ssh $SLAVE 'for i in {0..12};do rm -rf /home/t$i;mkdir /home/t$i;done'
 }
 
 function cleanup_slave2 {
-    ssh $SLAVE2 'for i in {0..10};do rm -rf /home/t$i;mkdir /home/t$i;done'
+    ssh $SLAVE2 'for i in {0..12};do rm -rf /home/t$i;mkdir /home/t$i;done'
 }
 
 function postparms {
@@ -56,11 +56,11 @@ function dist_test {
 }
 
 function ec {
-    gluster v create $VOL disperse 6 redundancy 2 $MASTER:/home/t1 $MASTER:/home/t2 $MASTER:/home/t3 $MASTER:/home/t4 $MASTER:/home/t5 $MASTER:/home/t6 force
+    gluster v create $VOL disperse 6 redundancy 2 $MASTER:/home/t1 $SLAVE:/home/t1 $MASTER:/home/t2 $SLAVE:/home/t2 $MASTER:/home/t3 $SLAVE:/home/t3 $MASTER:/home/t4 $SLAVE:/home/t4 $MASTER:/home/t5 $SLAVE:/home/t5 $MASTER:/home/t6 $SLAVE:/home/t6 force
     gluster v start $VOL
     preparms $VOL
     gluster volume set $VOL diagnostics.client-log-level TRACE
-    yes | gluster v attach-tier $VOL replica 2 $SLAVE:/home/t0 $SLAVE:/home/t1 $SLAVE:/home/t2 $SLAVE:/home/t3 force
+    yes | gluster v attach-tier $VOL replica 2 $MASTER:/home/t7 $SLAVE:/home/t7 $MASTER:/home/8 $SLAVE:/home/t9 force
     postparms $VOL
     ssh $CLIENT mount  $MASTER:/$VOL  /mnt
 }
@@ -68,7 +68,7 @@ function ec {
 function dist_wm {
     for i in {1..4}; do
         ssh $SLAVE mkdir /mnt/fastbrick$i
-        ssh $SLAVE dd if=/dev/zero of=/var/tmp/disk$i bs=1M count=100
+        ssh $SLAVE dd if=/dev/zero of=/var/tmp/disk$i bs=1M count=2000
         ssh $SLAVE mkfs --type=xfs  /var/tmp/disk$i
         ssh $SLAVE mount /var/tmp/disk$i /mnt/fastbrick$i
     done
@@ -79,23 +79,24 @@ function dist_wm {
 }
 
 function die {
+    killall glusterd
     killall glusterfs
     killall glusterfsd
     ssh $SLAVE killall glusterfs
     ssh $SLAVE killall glusterfsd
-    ssh $SLAVE2 killall glusterfs
-    ssh $SLAVE2 killall glusterfsd
+#    ssh $SLAVE2 killall glusterfs
+#    ssh $SLAVE2 killall glusterfsd
     rm -rf /var/lib/glusterd
     ssh $SLAVE rm -rf /var/lib/glusterd
-    ssh $SLAVE2 rm -rf /var/lib/glusterd
+#    ssh $SLAVE2 rm -rf /var/lib/glusterd
     systemctl daemon-reload
     systemctl restart glusterd
     ssh $SLAVE systemctl daemon-reload
     ssh $SLAVE systemctl restart glusterd
     gluster peer probe $SLAVE
-    ssh $SLAVE2 systemctl daemon-reload
-    ssh $SLAVE2 systemctl restart glusterd
-    gluster peer probe $SLAVE2
+#    ssh $SLAVE2 systemctl daemon-reload
+#    ssh $SLAVE2 systemctl restart glusterd
+#    gluster peer probe $SLAVE2
     gluster peer status
 }
 
@@ -191,9 +192,9 @@ while getopts ":nsdeatbp" opt; do
           ssh $CLIENT mount  -t glusterfs $MASTER:/$VOL  /mnt
           ssh $CLIENT mkdir /mnt/z
           ssh -f $CLIENT "cd /mnt/z;tar xf /root/g.tar 2> /tmp/out;echo $? >> /tmp/out"
-          sleep $rand
+          sleep 20
           echo Waited $rand seconds
-          yes | gluster v attach-tier $VOL replica 2 $SLAVE:/home/t7 $SLAVE:/home/t8 $SLAVE:/home/t9 $SLAVE:/home/t10 force
+          yes | gluster v tier $VOL attach $SLAVE:/home/t7 $SLAVE:/home/t8 $SLAVE:/home/t9 $SLAVE:/home/t10 force
           s=$(date +%s)
           ssh $CLIENT "while pgrep tar;do date +%s; echo waiting from $s for $(pgrep tar);sleep 2;done"
           ssh $CLIENT "cat /tmp/out"
