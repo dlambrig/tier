@@ -63,6 +63,39 @@ function tier_create {
     yes |gluster v attach-tier vol1  $HOSTNAME:/home/t3 $HOSTNAME:/home/t4 force
 }
 
+function tier_create_snap {
+    gluster v create vol1 $HOSTNAME:/thinv_bricks/brick0 $HOSTNAME:/thinv_bricks/brick1 force
+    gluster v set vol1 diagnostics.client-log-level DEBUG
+    gluster v start vol1
+    yes |gluster v attach-tier vol1  $HOSTNAME:/thinv_bricks/brick2 $HOSTNAME:/thinv_bricks/brick3 force
+}
+
+function thin_create {
+    fallocate -l 6G /var/tmp/dev0.img
+    mknod /dev/loop0 b 7 0
+    losetup  /dev/loop0 /var/tmp/dev0.img
+    pvcreate /dev/loop0
+    vgcreate mygroup /dev/loop0
+    lvcreate -L 2G -T mygroup/mythinpool
+    for i in {0..3}; do
+        lvcreate -V 1G -T mygroup/mythinpool -n thinv$i
+        mkfs.xfs -f /dev/mygroup/thinv$i
+        mount /dev/mygroup/thinv$i /thinv_bricks/brick$i
+    done
+}
+
+function thin_destroy {
+    for i in {0..3}; do
+        umount /thinv_bricks/brick$i
+        lvremove -f mygroup/mythinpool
+    done
+    vgremove -f mygroup
+    pvremove -f /dev/loop0
+    losetup -d /dev/loop0
+    rm -f /dev/loop0
+    rm -f /var/tmp/dev0.img
+}
+
 function tier_delete {
     yes|gluster v stop vol1;yes|gluster v delete vol1
 }

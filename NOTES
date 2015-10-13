@@ -39,5 +39,14 @@ bash
 root / rdMNyF73oN4Q      and the ip :  23.253.62.123
 jenkins awv93LkWUk7x
 
+----
+snap
 
+fallocate -l 2G /var/tmp/dev1.img
+mknod /dev/loop0 b 7 0
+losetup /dev/loop0 /var/tmp/dev1.img
+pvcreate /dev/loop0
+vgcreate mygroup /dev/loop0
+lvcreate -L 1G -T mygroup/mythinpool
+lvcreate -V 600M -T mygroup/mythinpool -n thinv1
 
