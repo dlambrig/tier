@@ -50,3 +50,17 @@ vgcreate mygroup /dev/loop0
 lvcreate -L 1G -T mygroup/mythinpool
 lvcreate -V 600M -T mygroup/mythinpool -n thinv1
 
+----
+backport
+
+1) git clone ssh://josferna@code.engineering.redhat.com:22/rhs-glusterfs
+2) git checkout -b <branch name u fancy> -t origin/rhgs-3.1.2
+3) cherry pick the master patch which u want to backport
+4) git commit -as --amend
+5) Edit the commit message
+6) Clone the master bug and select redhat product
+component dht
+7) ./rfc
+give the new bug id
+
+
