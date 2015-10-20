@@ -20,8 +20,8 @@ function postparms {
     gluster volume set $1 cluster.tier-demote-frequency $FREQ
     gluster volume set $1 cluster.tier-promote-frequency $FREQ
     gluster volume set $1 diagnostics.client-log-level DEBUG
-    gluster volume set $V0 performance.quick-read off
-    gluster volume set $V0 performance.io-cache off
+    gluster volume set $1 performance.quick-read off
+    gluster volume set $1 performance.io-cache off
 }
 
 function tier_wm {
