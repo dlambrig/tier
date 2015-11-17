@@ -139,3 +139,12 @@ function db_fill {
         i=$(($i+1))
     done
 }
+
+#function db_create {
+#    echo "pragma foreign_keys=on;" > /tmp/db.txt
+#    echo "create table gf_file_tb(gfid text primary key not null); " >> /tmp/db.txt
+#    echo "CREATE TABLE GF_FLINK_TB(GF_ID TEXT NOT NULL, GF_PID TEXT NOT NULL, FNAME TEXT NOT NULL, FPATH TEXT NOT NULL, W_DEL_FLAG INTEGER NOT NULL DEFAULT 0, LINK_UPDATE INTE
+#    echo "create table gf_time_tb(GF_ID TEXT NOT NULL references gf_file_tb, W_SEC integer not null PRIMARY KEY);" >> /tmp/db.txt
+#    echo ".backup /tmp/test.db;" >> /tmp/db.txt
+#    echo ".quit" >> /tmp/db.txt
+#}
