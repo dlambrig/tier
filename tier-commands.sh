@@ -10,7 +10,7 @@ function clear_cache {
 
 function tier_test {
     while true; do
-        ./run-tests.sh -f tests/basic/tier/fops-during-migration.t;
+        ./run-tests.sh -f tests/bugs/tier/readdir-during-mgiration.t
         if [ $? != 0 ]; then
             break
         fi
@@ -147,4 +147,6 @@ function db_fill {
 #    echo "create table gf_time_tb(GF_ID TEXT NOT NULL references gf_file_tb, W_SEC integer not null PRIMARY KEY);" >> /tmp/db.txt
 #    echo ".backup /tmp/test.db;" >> /tmp/db.txt
 #    echo ".quit" >> /tmp/db.txt
-#}
+#
+
+
