@@ -123,7 +123,7 @@ function perf1 {
     gluster v create $VOL disperse 6 redundancy 2 $MASTER:/home/t0 $MASTER:/home/t1 $MASTER:/home/t2 $SLAVE:/home/t0 $SLAVE:/home/t1 $SLAVE:/home/t2 force
     gluster v start vol1 force
     preparms $VOL
-    yes | gluster v attach-tier $VOL replica 2 $MASTER:/home/t3 $MASTER:/home/t4 $MASTER:/home/t5 $SLAVE:/home/t3 $SLAVE:/home/t4 $SLAVE:/home/t5 force
+    yes | gluster v attach-tier $VOL replica 2 $MASTER:/home/t3 $SLAVE:/home/t3 $MASTER:/home/t4 $SLAVE:/home/t4 $MASTER:/home/t5 $SLAVE:/home/t5 force
     postparms $VOL
 
     ssh $CLIENT mount -t glusterfs   $MASTER:/$VOL  /mnt
@@ -142,10 +142,47 @@ function perf2 {
 
 function perf3 {
 
-    yes | gluster v create $VOL replica 2 $MASTER:/home/t2 $MASTER:/home/t3 $SLAVE:/home/t2 $SLAVE:/home/t3 $SLAVE2:/home/t2 $SLAVE2:/home/t3 force
+    yes | gluster v create $VOL replica 2 $MASTER:/home/t0 $MASTER:/home/t1 $MASTER:/home/t2 $SLAVE:/home/t0 $SLAVE:/home/t1 $SLAVE:/home/t2 force
     gluster v start vol1 force
     preparms $VOL
     ssh $CLIENT mount  $MASTER:/$VOL  /mnt
+}
+
+function perf4 {
+    #    gluster v create $VOL disperse 6 redundancy 2 $MASTER:/home/t0 $MASTER:/home/t1 $SLAVE:/home/t0 $SLAVE:/home/t1 $SLAVE2:/home/t0 $SLAVE2:/home/t1 force
+    yes | gluster v create $VOL  replica 2 $MASTER:/home/t0 $MASTER:/home/t1 $MASTER:/home/t2 $SLAVE:/home/t0 $SLAVE:/home/t1 $SLAVE:/home/t2 force
+    #yes | gluster v create $VOL  replica 2 $MASTER:/home/t0 $MASTER:/home/t1 $MASTER:/home/t2 $SLAVE:/home/t0 force
+    gluster v set vol1 cluster.lookup-optimize on
+    gluster v start vol1 force
+    preparms $VOL
+    yes | gluster v attach-tier $VOL replica 2 $MASTER:/home/t3 $SLAVE:/home/t3 $MASTER:/home/t4 $SLAVE:/home/t4 $MASTER:/home/t5 $SLAVE:/home/t5 force
+    #yes | gluster v attach-tier $VOL replica 2 $MASTER:/home/t3 $SLAVE:/home/t3 $MASTER:/home/t4 $SLAVE:/home/t4  force
+    postparms $VOL
+
+    ssh $CLIENT mount -t glusterfs   $MASTER:/$VOL  /mnt
+
+}
+
+function perf5 {
+    gluster v create $VOL  replica 2 $MASTER:/home/t0 $MASTER:/home/t1 $MASTER:/home/t2 $SLAVE:/home/t0 $SLAVE:/home/t1 $SLAVE:/home/t2 $MASTER:/home/t3 $SLAVE:/home/t3 $MASTER:/home/t4 $SLAVE:/home/t4 $MASTER:/home/t5 $SLAVE:/home/t5 force
+    gluster v start $VOL force
+    preparms $VOL
+    
+    postparms $VOL
+
+    ssh $CLIENT mount -t glusterfs   $MASTER:$VOL  /mnt
+
+}
+
+function perf6 {
+    yes | gluster v create vol2  replica 2 $MASTER:/home/t6 $MASTER:/home/t7 $MASTER:/home/t8 $SLAVE:/home/t6 $SLAVE:/home/t7 $SLAVE:/home/t8 force
+    gluster v start vol2 force
+    preparms vol2
+    yes | gluster v tier vol2 attach replica 2 $MASTER:/home/t9 $SLAVE:/home/t9 $MASTER:/home/t10 $SLAVE:/home/t10 $MASTER:/home/t11 $SLAVE:/home/t11 force
+    postparms $VOL
+
+    ssh $CLIENT mount -t glusterfs   $MASTER:/vol2  /mnt2
+
 }
 
 while getopts ":nsdeatbp" opt; do
@@ -224,7 +261,7 @@ while getopts ":nsdeatbp" opt; do
           ;;
       p)
           shift $((OPTIND-1))
-          getopts ":abc" opt
+          getopts ":abcdef" opt
           case $opt in
               a)
                   echo ec+distrep tiered
@@ -238,7 +275,17 @@ while getopts ":nsdeatbp" opt; do
                   echo just dist
                   perf3
                   ;;
-              esac
+              d)
+                  echo distrep+distrep tiered
+                  perf4
+                  ;;
+              e) echo big distrep
+                 perf5
+                 ;;
+              f) echo  distrep+distrep tiered t6-t12
+                 perf6
+                 ;;
+          esac
           ;;
       \?)
           echo "-n : start from scratch: kill restart glusterd"
