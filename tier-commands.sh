@@ -8,9 +8,13 @@ function clear_cache {
     echo 3 > /proc/sys/vm/drop_caches
 }
 
+function tier_clear {
+    for i in {1..4};do rm -rf /home/t$i;mkdir /home/t$i;done
+}
+
 function tier_test {
     while true; do
-        ./run-tests.sh -f tests/bugs/tier/readdir-during-mgiration.t
+        ./run-tests.sh -f tests/bugs/tier/legacy-many.t
         if [ $? != 0 ]; then
             break
         fi
