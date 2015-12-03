@@ -64,3 +64,6 @@ component dht
 give the new bug id
 
 
+( tail -F -n0 /var/log/glusterfs/vol1-tier.log  & ) | grep -q "Begin run tier"&
+g v attach-tier vol1 $HOSTNAME:/home/t3 $HOSTNAME:/home/t4 force
+fg %1
