@@ -1,9 +1,10 @@
-MASTER=rhs-cli-01
-SLAVE=rhs-cli-02
+MASTER=gprfs017
+SLAVE=gprfs019
 SLAVE2=
-CLIENT=rhs-cli-14
+CLIENT=gprfs018
 VOL=vol1
 FREQ=60
+SUBVOL=/mnt
 
 function cleanup {
     for i in {0..12};do rm -rf /home/t$i;mkdir /home/t$i;done
@@ -15,6 +16,11 @@ function cleanup_slave {
 
 function cleanup_slave2 {
     ssh $SLAVE2 'for i in {0..12};do rm -rf /home/t$i;mkdir /home/t$i;done'
+}
+
+function buildfs {
+    ssh $MASTER 'j=0;for i in {b..m};do echo 'making sd'$i;mkfs.xfs -f /dev/sd$i;mkdir -p $SUBVOL/t$j;mount /dev/sd$i $SUBVOL/t$j;(( j+= 1));done'
+    ssh $SLAVE 'j=0;for i in {b..m};do echo 'making sd'$i;mkfs.xfs -f /dev/sd$i;mkdir -p $SUBVOL/t$j;mount /dev/sd$i $SUBVOL/t$j;(( j+= 1));done'
 }
 
 function postparms {
@@ -32,7 +38,7 @@ function preparms {
 }
 
 function dist_cold {
-    gluster v create $VOL replica 2 $MASTER:/home/t1 $MASTER:/home/t2 $MASTER:/home/t3 $MASTER:/home/t4 $MASTER:/home/t5 $MASTER:/home/t6 force
+    gluster v create $VOL replica 2 $MASTER:$SUBVOL/t1 $MASTER:$SUBVOL/t2 $MASTER:$SUBVOL/t3 $MASTER:$SUBVOL/t4 $MASTER:$SUBVOL/t5 $MASTER:$SUBVOL/t6 force
     gluster v start $VOL
     preparms $VOL
     gluster volume set $VOL diagnostics.client-log-level DEBUG
@@ -40,7 +46,7 @@ function dist_cold {
 
 function dist {
     dist_cold
-    yes | gluster v attach-tier $VOL replica 2 $SLAVE:/home/t0 $SLAVE:/home/t1 $SLAVE:/home/t2 $SLAVE:/home/t3 force
+    yes | gluster v attach-tier $VOL replica 2 $SLAVE:$SUBVOL/t0 $SLAVE:$SUBVOL/t1 $SLAVE:$SUBVOL/t2 $SLAVE:$SUBVOL/t3 force
     postparms $VOL
     ssh $CLIENT mount -t glusterfs $MASTER:/$VOL  /mnt
 }
@@ -50,17 +56,17 @@ function dist_test {
     ssh $CLIENT mount $MASTER:/$VOL  /mnt
     ssh $CLIENT mkdir -p /mnt/z/a
 #    yes | gluster v stop $VOL
-    yes | gluster v attach-tier $VOL replica 2 $SLAVE:/home/t0 $SLAVE:/home/t1 $SLAVE:/home/t2 $SLAVE:/home/t3 force
+    yes | gluster v attach-tier $VOL replica 2 $SLAVE:$SUBVOL/t0 $SLAVE:$SUBVOL/t1 $SLAVE:$SUBVOL/t2 $SLAVE:$SUBVOL/t3 force
 #    gluster v start $VOL
     postparms $VOL
 }
 
 function ec {
-    gluster v create $VOL disperse 6 redundancy 2 $MASTER:/home/t1 $SLAVE:/home/t1 $MASTER:/home/t2 $SLAVE:/home/t2 $MASTER:/home/t3 $SLAVE:/home/t3 $MASTER:/home/t4 $SLAVE:/home/t4 $MASTER:/home/t5 $SLAVE:/home/t5 $MASTER:/home/t6 $SLAVE:/home/t6 force
+    gluster v create $VOL disperse 6 redundancy 2 $MASTER:$SUBVOL/t1 $SLAVE:$SUBVOL/t1 $MASTER:$SUBVOL/t2 $SLAVE:$SUBVOL/t2 $MASTER:$SUBVOL/t3 $SLAVE:$SUBVOL/t3 $MASTER:$SUBVOL/t4 $SLAVE:$SUBVOL/t4 $MASTER:$SUBVOL/t5 $SLAVE:$SUBVOL/t5 $MASTER:$SUBVOL/t6 $SLAVE:$SUBVOL/t6 force
     gluster v start $VOL
     preparms $VOL
     gluster volume set $VOL diagnostics.client-log-level TRACE
-    yes | gluster v attach-tier $VOL replica 2 $MASTER:/home/t7 $SLAVE:/home/t7 $MASTER:/home/8 $SLAVE:/home/t9 force
+    yes | gluster v attach-tier $VOL replica 2 $MASTER:$SUBVOL/t7 $SLAVE:$SUBVOL/t7 $MASTER:$SUBVOL/8 $SLAVE:$SUBVOL/t9 force
     postparms $VOL
     ssh $CLIENT mount  $MASTER:/$VOL  /mnt
 }
@@ -119,11 +125,11 @@ function setup  {
 }
 
 function perf1 {
-    #    gluster v create $VOL disperse 6 redundancy 2 $MASTER:/home/t0 $MASTER:/home/t1 $SLAVE:/home/t0 $SLAVE:/home/t1 $SLAVE2:/home/t0 $SLAVE2:/home/t1 force
-    gluster v create $VOL disperse 6 redundancy 2 $MASTER:/home/t0 $MASTER:/home/t1 $MASTER:/home/t2 $SLAVE:/home/t0 $SLAVE:/home/t1 $SLAVE:/home/t2 force
+    #    gluster v create $VOL disperse 6 redundancy 2 $MASTER:$SUBVOL/t0 $MASTER:$SUBVOL/t1 $SLAVE:$SUBVOL/t0 $SLAVE:$SUBVOL/t1 $SLAVE2:$SUBVOL/t0 $SLAVE2:$SUBVOL/t1 force
+    gluster v create $VOL disperse 6 redundancy 2 $MASTER:$SUBVOL/t0 $MASTER:$SUBVOL/t1 $MASTER:$SUBVOL/t2 $SLAVE:$SUBVOL/t0 $SLAVE:$SUBVOL/t1 $SLAVE:$SUBVOL/t2 force
     gluster v start vol1 force
     preparms $VOL
-    yes | gluster v attach-tier $VOL replica 2 $MASTER:/home/t3 $SLAVE:/home/t3 $MASTER:/home/t4 $SLAVE:/home/t4 $MASTER:/home/t5 $SLAVE:/home/t5 force
+    yes | gluster v attach-tier $VOL replica 2 $MASTER:$SUBVOL/t3 $SLAVE:$SUBVOL/t3 $MASTER:$SUBVOL/t4 $SLAVE:$SUBVOL/t4 $MASTER:$SUBVOL/t5 $SLAVE:$SUBVOL/t5 force
     postparms $VOL
 
     ssh $CLIENT mount -t glusterfs   $MASTER:/$VOL  /mnt
@@ -131,8 +137,8 @@ function perf1 {
 }
 
 function perf2 {
-#    gluster v create $VOL disperse 6 redundancy 2 $MASTER:/home/t0 $MASTER:/home/t1 $SLAVE:/home/t0 $SLAVE:/home/t1 $SLAVE2:/home/t0 $SLAVE2:/home/t1 force
-    gluster v create $VOL disperse 6 redundancy 2 $MASTER:/home/t0 $MASTER:/home/t1 $MASTER:/home/t2 $SLAVE:/home/t3 $SLAVE:/home/t4 $SLAVE:/home/t5 force
+#    gluster v create $VOL disperse 6 redundancy 2 $MASTER:$SUBVOL/t0 $MASTER:$SUBVOL/t1 $SLAVE:$SUBVOL/t0 $SLAVE:$SUBVOL/t1 $SLAVE2:$SUBVOL/t0 $SLAVE2:$SUBVOL/t1 force
+    gluster v create $VOL disperse 6 redundancy 2 $MASTER:$SUBVOL/t0 $MASTER:$SUBVOL/t1 $MASTER:$SUBVOL/t2 $SLAVE:$SUBVOL/t3 $SLAVE:$SUBVOL/t4 $SLAVE:$SUBVOL/t5 force
     gluster v start vol1 force
     preparms $VOL
 #    ssh $CLIENT mount  $MASTER:/$VOL  /mnt
@@ -142,21 +148,21 @@ function perf2 {
 
 function perf3 {
 
-    yes | gluster v create $VOL replica 2 $MASTER:/home/t0 $MASTER:/home/t1 $MASTER:/home/t2 $SLAVE:/home/t0 $SLAVE:/home/t1 $SLAVE:/home/t2 force
+    yes | gluster v create $VOL replica 2 $MASTER:$SUBVOL/t0 $MASTER:$SUBVOL/t1 $MASTER:$SUBVOL/t2 $SLAVE:$SUBVOL/t0 $SLAVE:$SUBVOL/t1 $SLAVE:$SUBVOL/t2 force
     gluster v start vol1 force
     preparms $VOL
     ssh $CLIENT mount  $MASTER:/$VOL  /mnt
 }
 
 function perf4 {
-    #    gluster v create $VOL disperse 6 redundancy 2 $MASTER:/home/t0 $MASTER:/home/t1 $SLAVE:/home/t0 $SLAVE:/home/t1 $SLAVE2:/home/t0 $SLAVE2:/home/t1 force
-    yes | gluster v create $VOL  replica 2 $MASTER:/home/t0 $SLAVE:/home/t0 $MASTER:/home/t1 $SLAVE:/home/t1 force
-    #yes | gluster v create $VOL  replica 2 $MASTER:/home/t0 $MASTER:/home/t1 $MASTER:/home/t2 $SLAVE:/home/t0 force
+    #    gluster v create $VOL disperse 6 redundancy 2 $MASTER:$SUBVOL/t0 $MASTER:$SUBVOL/t1 $SLAVE:$SUBVOL/t0 $SLAVE:$SUBVOL/t1 $SLAVE2:$SUBVOL/t0 $SLAVE2:$SUBVOL/t1 force
+    yes | gluster v create $VOL  replica 2 $MASTER:$SUBVOL/t0 $SLAVE:$SUBVOL/t0 $MASTER:$SUBVOL/t1 $SLAVE:$SUBVOL/t1 force
+    #yes | gluster v create $VOL  replica 2 $MASTER:$SUBVOL/t0 $MASTER:$SUBVOL/t1 $MASTER:$SUBVOL/t2 $SLAVE:$SUBVOL/t0 force
 #    gluster v set vol1 cluster.lookup-optimize on
     gluster v start vol1 force
     preparms $VOL
-    yes | gluster v attach-tier $VOL replica 2 $MASTER:/home/t2 $SLAVE:/home/t2 $MASTER:/home/t3 $SLAVE:/home/t3 force
-    #yes | gluster v attach-tier $VOL replica 2 $MASTER:/home/t3 $SLAVE:/home/t3 $MASTER:/home/t4 $SLAVE:/home/t4  force
+    yes | gluster v attach-tier $VOL replica 2 $MASTER:$SUBVOL/t2 $SLAVE:$SUBVOL/t2 $MASTER:$SUBVOL/t3 $SLAVE:$SUBVOL/t3 force
+    #yes | gluster v attach-tier $VOL replica 2 $MASTER:$SUBVOL/t3 $SLAVE:$SUBVOL/t3 $MASTER:$SUBVOL/t4 $SLAVE:$SUBVOL/t4  force
     postparms $VOL
 
     ssh $CLIENT mount -t glusterfs   $MASTER:/$VOL  /mnt
@@ -164,7 +170,7 @@ function perf4 {
 }
 
 function perf5 {
-    gluster v create $VOL  replica 2 $MASTER:/home/t0 $MASTER:/home/t1 $MASTER:/home/t2 $SLAVE:/home/t0 $SLAVE:/home/t1 $SLAVE:/home/t2 $MASTER:/home/t3 $SLAVE:/home/t3 $MASTER:/home/t4 $SLAVE:/home/t4 $MASTER:/home/t5 $SLAVE:/home/t5 force
+    gluster v create $VOL  replica 2 $MASTER:$SUBVOL/t0 $MASTER:$SUBVOL/t1 $MASTER:$SUBVOL/t2 $SLAVE:$SUBVOL/t0 $SLAVE:$SUBVOL/t1 $SLAVE:$SUBVOL/t2 $MASTER:$SUBVOL/t3 $SLAVE:$SUBVOL/t3 $MASTER:$SUBVOL/t4 $SLAVE:$SUBVOL/t4 $MASTER:$SUBVOL/t5 $SLAVE:$SUBVOL/t5 force
     gluster v start $VOL force
     preparms $VOL
     
@@ -175,19 +181,23 @@ function perf5 {
 }
 
 function perf6 {
-    yes | gluster v create vol2  replica 2 $MASTER:/home/t6 $MASTER:/home/t7 $MASTER:/home/t8 $SLAVE:/home/t6 $SLAVE:/home/t7 $SLAVE:/home/t8 force
+    yes | gluster v create vol2  replica 2 $MASTER:$SUBVOL/t6 $MASTER:$SUBVOL/t7 $MASTER:$SUBVOL/t8 $SLAVE:$SUBVOL/t6 $SLAVE:$SUBVOL/t7 $SLAVE:$SUBVOL/t8 force
     gluster v start vol2 force
     preparms vol2
-    yes | gluster v tier vol2 attach replica 2 $MASTER:/home/t9 $SLAVE:/home/t9 $MASTER:/home/t10 $SLAVE:/home/t10 $MASTER:/home/t11 $SLAVE:/home/t11 force
+    yes | gluster v tier vol2 attach replica 2 $MASTER:$SUBVOL/t9 $SLAVE:$SUBVOL/t9 $MASTER:$SUBVOL/t10 $SLAVE:$SUBVOL/t10 $MASTER:$SUBVOL/t11 $SLAVE:$SUBVOL/t11 force
     postparms $VOL
 
     ssh $CLIENT mount -t glusterfs   $MASTER:/vol2  /mnt2
 
 }
 
-while getopts ":nsdeatbp" opt; do
-  case $opt in
-      n)
+while getopts ":nsdceatbp" opt; do
+    case $opt in
+        c)
+            echo build fs
+            buildfs
+            ;;
+        n)
           echo copy client id
           setup
           echo restart glusterd and probe 
@@ -231,7 +241,7 @@ while getopts ":nsdeatbp" opt; do
           ssh -f $CLIENT "cd /mnt/z;tar xf /root/g.tar 2> /tmp/out;echo $? >> /tmp/out"
           sleep 20
           echo Waited $rand seconds
-          yes | gluster v tier $VOL attach $SLAVE:/home/t7 $SLAVE:/home/t8 $SLAVE:/home/t9 $SLAVE:/home/t10 force
+          yes | gluster v tier $VOL attach $SLAVE:$SUBVOL/t7 $SLAVE:$SUBVOL/t8 $SLAVE:$SUBVOL/t9 $SLAVE:$SUBVOL/t10 force
           s=$(date +%s)
           ssh $CLIENT "while pgrep tar;do date +%s; echo waiting from $s for $(pgrep tar);sleep 2;done"
           ssh $CLIENT "cat /tmp/out"
@@ -251,13 +261,13 @@ while getopts ":nsdeatbp" opt; do
 #          sleep $rand
 #          echo Waited $rand seconds
           s=$(date +%s)
-#          ssh $SLAVE "cd /home;while ! getfattr -e hex -m fix-layout-done -d t0|grep fix-layout-done ;do echo Wait for fix layout;sleep 3;done"
+#          ssh $SLAVE "cd $SUBVOL;while ! getfattr -e hex -m fix-layout-done -d t0|grep fix-layout-done ;do echo Wait for fix layout;sleep 3;done"
 
           ssh $CLIENT "while pgrep tar;do date +%s; echo waiting from $s for $(pgrep tar);sleep 2;done"
           ssh $CLIENT "cat /tmp/out"
           ssh $CLIENT "find /mnt/z|wc -l"
           echo Done. Now attach
-          yes | gluster v attach-tier $VOL replica 2 $SLAVE:/home/t0 $SLAVE:/home/t1 $SLAVE:/home/t2 $SLAVE:/home/t3 force
+          yes | gluster v attach-tier $VOL replica 2 $SLAVE:$SUBVOL/t0 $SLAVE:$SUBVOL/t1 $SLAVE:$SUBVOL/t2 $SLAVE:$SUBVOL/t3 force
           ;;
       p)
           shift $((OPTIND-1))

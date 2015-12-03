@@ -8,9 +8,13 @@ function clear_cache {
     echo 3 > /proc/sys/vm/drop_caches
 }
 
+function tier_clear {
+    for i in {1..4};do rm -rf /home/t$i;mkdir /home/t$i;done
+}
+
 function tier_test {
     while true; do
-        ./run-tests.sh -f tests/basic/tier/fops-during-migration.t;
+        ./run-tests.sh -f tests/bugs/tier/legacy-many.t
         if [ $? != 0 ]; then
             break
         fi
@@ -147,4 +151,6 @@ function db_fill {
 #    echo "create table gf_time_tb(GF_ID TEXT NOT NULL references gf_file_tb, W_SEC integer not null PRIMARY KEY);" >> /tmp/db.txt
 #    echo ".backup /tmp/test.db;" >> /tmp/db.txt
 #    echo ".quit" >> /tmp/db.txt
-#}
+#
+
+
