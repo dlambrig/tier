@@ -4,7 +4,7 @@ SLAVE2=
 CLIENT=gprfs018
 VOL=vol1
 FREQ=60
-SUBVOL=/mnt
+SUBVOL=/home
 
 function cleanup {
     for i in {0..12};do rm -rf /home/t$i;mkdir /home/t$i;done
