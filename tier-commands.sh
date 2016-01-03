@@ -79,12 +79,12 @@ function tier_create_snap {
 }
 
 function thin_create {
-    fallocate -l 10G $1/dev0.img
+    fallocate -l 20G $1/dev0.img
     mknod /dev/loop0 b 7 0
     losetup  /dev/loop0 $1/dev0.img
     pvcreate /dev/loop0
     vgcreate mygroup /dev/loop0
-    lvcreate -L 9G -T mygroup/mythinpool
+    lvcreate -L 19G -T mygroup/mythinpool
     for i in {0..3}; do
         lvcreate -V 1G -T mygroup/mythinpool -n thinv$i
         mkfs.xfs -f /dev/mygroup/thinv$i

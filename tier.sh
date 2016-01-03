@@ -1,10 +1,11 @@
-MASTER=gprfs017
-SLAVE=gprfs019
+MASTER=rhs-cli-11
+SLAVE=rhs-cli-12
 SLAVE2=
-CLIENT=gprfs018
+CLIENT=rhs-cli-14
 VOL=vol1
 FREQ=60
 SUBVOL=/home
+THIN=/thinv_bricks/brick
 
 function cleanup {
     for i in {0..12};do rm -rf /home/t$i;mkdir /home/t$i;done
@@ -191,6 +192,17 @@ function perf6 {
 
 }
 
+function perf7 {
+    gluster v create $VOL replica 2 $MASTER:${THIN}0 $SLAVE:${THIN}0 $MASTER:${THIN}1 $SLAVE:${THIN}1 $MASTER:${THIN}2 $SLAVE:${THIN}2 force
+    gluster v start vol1 force
+    preparms $VOL
+    yes | gluster v attach-tier $VOL replica 2 $MASTER:${THIN}3 $SLAVE:${THIN}3 force
+
+    postparms $VOL
+
+    ssh $CLIENT mount -t glusterfs   $MASTER:/$VOL  /mnt
+}
+
 while getopts ":nsdceatbp" opt; do
     case $opt in
         c)
@@ -271,7 +283,7 @@ while getopts ":nsdceatbp" opt; do
           ;;
       p)
           shift $((OPTIND-1))
-          getopts ":abcdef" opt
+          getopts ":abcdefg" opt
           case $opt in
               a)
                   echo ec+distrep tiered
@@ -294,6 +306,9 @@ while getopts ":nsdceatbp" opt; do
                  ;;
               f) echo  distrep+distrep tiered t6-t12
                  perf6
+                 ;;
+              g) echo  distrep+distrep thin
+                 perf7
                  ;;
           esac
           ;;
