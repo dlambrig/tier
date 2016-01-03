@@ -79,9 +79,9 @@ function tier_create_snap {
 }
 
 function thin_create {
-    fallocate -l 10G /var/tmp/dev0.img
+    fallocate -l 10G $1/dev0.img
     mknod /dev/loop0 b 7 0
-    losetup  /dev/loop0 /var/tmp/dev0.img
+    losetup  /dev/loop0 $1/dev0.img
     pvcreate /dev/loop0
     vgcreate mygroup /dev/loop0
     lvcreate -L 9G -T mygroup/mythinpool
@@ -101,7 +101,7 @@ function thin_destroy {
     pvremove -f /dev/loop0
     losetup -d /dev/loop0
     rm -f /dev/loop0
-    rm -f /var/tmp/dev0.img
+    rm -f $1/dev0.img
 }
 
 function tier_delete {
