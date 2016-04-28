@@ -6,6 +6,8 @@ sudo systemctl enable rpcbind.socket
 sudo systemctl restart rpcbind.service
 sudo mount -a
 
+rpmbuild -ta glusterfs-3.7.9.tar.gz --define 'dist .el7rhs'
+
 - busy during migration
 - NFS+rename
 - NFS+dht_rebalance_in_progress_check
